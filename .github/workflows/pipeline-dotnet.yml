@@ -1,0 +1,80 @@
+name: Deploy events_access to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-admin-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-admin-
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        run: |
+          IMAGE=$(echo ghcr.io/${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          docker build -f Dockerfile -t $IMAGE:latest -t $IMAGE:${{ github.sha }} .
+          docker push $IMAGE:latest
+          docker push $IMAGE:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            echo "→ Logging into GHCR"
+            echo "${{ secrets.TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            echo "→ Yendo al stack de infraestructura"
+            cd /opt/quasar/events_infrastructure
+
+            echo "→ Bajando última imagen de events_access"
+            docker compose pull admin
+
+            echo "→ Aplicando cambios al contenedor admin"
+            docker compose up -d --no-deps admin
+
+            echo "→ Limpiando imágenes viejas"
+            docker image prune -f
+
+            echo "→ Estado del contenedor"
+            docker compose ps admin
+
+            echo "✓ Deploy de events_access completado"

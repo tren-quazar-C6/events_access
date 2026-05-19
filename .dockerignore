@@ -1,0 +1,21 @@
+# Archivos de build local
+bin/
+obj/
+
+# Configuración del IDE
+.vs/
+.vscode/
+.idea/
+*.user
+
+# Git
+.git/
+.gitignore
+
+# Documentación
+README.md
+*.md
+
+# Variables locales
+*.env
+appsettings.Development.json
