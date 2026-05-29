@@ -1,0 +1,99 @@
+@model events_access.ViewModels.AccessIndexViewModel
+
+@{
+    ViewData["Title"] = "Control de acceso";
+}
+
+<section class="access-shell">
+    <div class="access-topbar">
+        <div>
+            <p class="eyebrow">Events Quasar</p>
+            <h1>Control de acceso</h1>
+        </div>
+        <div class="scan-health" id="scanHealth" data-state="ready">
+            <span class="health-dot"></span>
+            <span id="scanHealthText">Scanner listo</span>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ApiError))
+    {
+        <div class="system-alert">@Model.ApiError</div>
+    }
+
+    <div class="access-grid">
+        <aside class="access-panel controls-panel">
+            <label class="field-label" for="eventSelect">Evento</label>
+            <select id="eventSelect" class="form-select access-input">
+                <option value="">Todos los eventos</option>
+                @foreach (var evento in Model.Eventos)
+                {
+                    <option value="@evento.IdEvento">@evento.NombreEvento</option>
+                }
+            </select>
+
+            <div class="field-row">
+                <div>
+                    <label class="field-label" for="staffId">Empleado</label>
+                    <input id="staffId" class="form-control access-input" inputmode="numeric" type="number" min="1" value="1" />
+                </div>
+                <div>
+                    <label class="field-label" for="deviceName">Dispositivo</label>
+                    <input id="deviceName" class="form-control access-input" value="Acceso principal" />
+                </div>
+            </div>
+
+            <label class="field-label" for="qrInput">Lectura QR</label>
+            <textarea id="qrInput" class="form-control qr-input" rows="4" autocomplete="off" spellcheck="false" placeholder="Escanea o pega el QR"></textarea>
+
+            <div class="button-row">
+                <button id="scanButton" class="btn btn-primary scan-button" type="button">
+                    Validar entrada
+                </button>
+                <button id="clearButton" class="btn btn-outline-secondary icon-button" type="button" aria-label="Limpiar">
+                    ×
+                </button>
+            </div>
+        </aside>
+
+        <main class="access-panel result-panel" id="resultPanel" data-result="idle">
+            <div class="result-copy">
+                <p class="eyebrow">Estado</p>
+                <h2 id="resultTitle">Esperando QR</h2>
+                <p id="resultMessage">El flujo está listo para leer, validar, permitir o denegar, y registrar.</p>
+            </div>
+
+            <div class="location-card">
+                <p>Ubicación</p>
+                <dl>
+                    <div>
+                        <dt>SECCIÓN</dt>
+                        <dd id="locationSection">--</dd>
+                    </div>
+                    <div>
+                        <dt>FILA</dt>
+                        <dd id="locationRow">--</dd>
+                    </div>
+                    <div>
+                        <dt>ASIENTO</dt>
+                        <dd id="locationSeat">--</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="scan-meta">
+                <span id="latency">-- ms</span>
+                <span id="ticketId">Ticket --</span>
+                <span id="scanId">Registro --</span>
+            </div>
+        </main>
+
+        <section class="access-panel history-panel">
+            <div class="history-header">
+                <h2>Lecturas recientes</h2>
+                <span id="scanCount">0</span>
+            </div>
+            <ol id="scanHistory" class="scan-history"></ol>
+        </section>
+    </div>
+</section>

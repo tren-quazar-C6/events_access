@@ -1,7 +1,12 @@
+using events_access.Models.Access;
+using events_access.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<ApiOptions>(builder.Configuration.GetSection(ApiOptions.SectionName));
+builder.Services.AddHttpClient<AccessApiClient>();
 
 var app = builder.Build();
 
@@ -22,7 +27,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Access}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 
