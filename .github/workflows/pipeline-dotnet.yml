@@ -3,7 +3,7 @@ name: Deploy events_access to VPS
 on:
   push:
     branches:
-      - main
+      - feature/access
 
 permissions:
   packages: write
