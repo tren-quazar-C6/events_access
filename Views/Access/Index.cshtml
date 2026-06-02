@@ -1,7 +1,7 @@
 @model events_access.ViewModels.AccessIndexViewModel
 
 @{
-Layout = null;
+    Layout = null;
 }
 <!DOCTYPE html>
 <html lang="es">
@@ -132,18 +132,6 @@ Layout = null;
                 <span class="material-symbols-outlined nav-icon">person_pin_circle</span>
                 Control de Acceso
             </a>
-            <a class="nav-item" href="#">
-                <span class="material-symbols-outlined nav-icon">space_dashboard</span>
-                Dashboard
-            </a>
-            <a class="nav-item" href="#">
-                <span class="material-symbols-outlined nav-icon">confirmation_number</span>
-                Taquilla
-            </a>
-            <a class="nav-item" href="#">
-                <span class="material-symbols-outlined nav-icon">diversity_3</span>
-                Staff
-            </a>
         </nav>
     </aside>
 
@@ -159,7 +147,7 @@ Layout = null;
 
         @if (!string.IsNullOrWhiteSpace(Model.ApiError))
         {
-        <div class="system-alert">⚠ @Model.ApiError</div>
+            <div class="system-alert">⚠ @Model.ApiError</div>
         }
 
         <!-- Stats -->
@@ -196,7 +184,7 @@ Layout = null;
                     <option value="">Todos los eventos del día</option>
                     @foreach (var evento in Model.Eventos)
                     {
-                    <option value="@evento.IdEvento">@evento.NombreEvento</option>
+                        <option value="@evento.IdEvento">@evento.NombreEvento</option>
                     }
                 </select>
             </div>
@@ -259,214 +247,214 @@ Layout = null;
 </div>
 
 <script>
-    (() => {
-        const STORAGE_KEY_HISTORY  = 'cc_scan_history';
-        const STORAGE_KEY_SCANNED  = 'cc_scanned_count';
-        const STORAGE_KEY_DATE     = 'cc_scan_date';
+(() => {
+    const STORAGE_KEY_HISTORY  = 'cc_scan_history';
+    const STORAGE_KEY_SCANNED  = 'cc_scanned_count';
+    const STORAGE_KEY_DATE     = 'cc_scan_date';
 
-        const qrInput      = document.getElementById('qrInput');
-        const scanBtn      = document.getElementById('scanButton');
-        const clearBtn     = document.getElementById('clearButton');
-        const resultCard   = document.getElementById('resultCard');
-        const resultIcon   = document.getElementById('resultIcon');
-        const resultStatus = document.getElementById('resultStatus');
-        const resultMsg    = document.getElementById('resultMessage');
-        const metaLatency  = document.getElementById('metaLatency');
-        const metaTicket   = document.getElementById('metaTicket');
-        const metaScan     = document.getElementById('metaScan');
-        const historyList  = document.getElementById('historyList');
-        const historyCount = document.getElementById('historyCount');
-        const healthDot    = document.getElementById('healthDot');
-        const healthText   = document.getElementById('healthText');
-        const statAttendance    = document.getElementById('statAttendance');
-        const statAttendanceSub = document.getElementById('statAttendanceSub');
-        const statScanned       = document.getElementById('statScanned');
+    const qrInput      = document.getElementById('qrInput');
+    const scanBtn      = document.getElementById('scanButton');
+    const clearBtn     = document.getElementById('clearButton');
+    const resultCard   = document.getElementById('resultCard');
+    const resultIcon   = document.getElementById('resultIcon');
+    const resultStatus = document.getElementById('resultStatus');
+    const resultMsg    = document.getElementById('resultMessage');
+    const metaLatency  = document.getElementById('metaLatency');
+    const metaTicket   = document.getElementById('metaTicket');
+    const metaScan     = document.getElementById('metaScan');
+    const historyList  = document.getElementById('historyList');
+    const historyCount = document.getElementById('historyCount');
+    const healthDot    = document.getElementById('healthDot');
+    const healthText   = document.getElementById('healthText');
+    const statAttendance    = document.getElementById('statAttendance');
+    const statAttendanceSub = document.getElementById('statAttendanceSub');
+    const statScanned       = document.getElementById('statScanned');
 
-        const configIds = ['eventSelect', 'staffId', 'deviceName'];
+    const configIds = ['eventSelect', 'staffId', 'deviceName'];
 
-        // ── Persistencia ───────────────────────────────────────────────
-        // Resetear si es un día nuevo
-        const today = new Date().toDateString();
-        if (localStorage.getItem(STORAGE_KEY_DATE) !== today) {
-            localStorage.setItem(STORAGE_KEY_DATE,    today);
-            localStorage.setItem(STORAGE_KEY_SCANNED, '0');
-            localStorage.setItem(STORAGE_KEY_HISTORY, '[]');
-        }
+    // ── Persistencia ───────────────────────────────────────────────
+    // Resetear si es un día nuevo
+    const today = new Date().toDateString();
+    if (localStorage.getItem(STORAGE_KEY_DATE) !== today) {
+        localStorage.setItem(STORAGE_KEY_DATE,    today);
+        localStorage.setItem(STORAGE_KEY_SCANNED, '0');
+        localStorage.setItem(STORAGE_KEY_HISTORY, '[]');
+    }
 
-        let sessionScanned = parseInt(localStorage.getItem(STORAGE_KEY_SCANNED) ?? '0');
-        let history        = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) ?? '[]');
+    let sessionScanned = parseInt(localStorage.getItem(STORAGE_KEY_SCANNED) ?? '0');
+    let history        = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) ?? '[]');
 
-        statScanned.textContent  = sessionScanned;
+    statScanned.textContent  = sessionScanned;
+    historyCount.textContent = history.length;
+    renderHistory();
+
+    function saveState() {
+        localStorage.setItem(STORAGE_KEY_SCANNED, sessionScanned.toString());
+        localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+    }
+
+    function renderHistory() {
+        historyList.innerHTML = '';
+        history.forEach(h => {
+            const li = document.createElement('li');
+            li.className = `history-item ${h.css}`;
+            li.innerHTML = `<span class="history-token">${h.token}</span><span class="history-result">${h.resultado}</span><span class="history-time">${h.hora}</span>`;
+            historyList.appendChild(li);
+        });
         historyCount.textContent = history.length;
+    }
+
+    document.getElementById('clearHistory').addEventListener('click', () => {
+        history        = [];
+        sessionScanned = 0;
+        statScanned.textContent = 0;
+        saveState();
         renderHistory();
+    });
 
-        function saveState() {
-            localStorage.setItem(STORAGE_KEY_SCANNED, sessionScanned.toString());
-            localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
-        }
-
-        function renderHistory() {
-            historyList.innerHTML = '';
-            history.forEach(h => {
-                const li = document.createElement('li');
-                li.className = `history-item ${h.css}`;
-                li.innerHTML = `<span class="history-token">${h.token}</span><span class="history-result">${h.resultado}</span><span class="history-time">${h.hora}</span>`;
-                historyList.appendChild(li);
-            });
-            historyCount.textContent = history.length;
-        }
-
-        document.getElementById('clearHistory').addEventListener('click', () => {
-            history        = [];
-            sessionScanned = 0;
-            statScanned.textContent = 0;
-            saveState();
-            renderHistory();
-        });
-
-        // ── Stats ──────────────────────────────────────────────────────
-        async function cargarStats() {
-            const idEvento = parseInt(document.getElementById('eventSelect').value);
-            if (idEvento) {
-                try {
-                    const res  = await fetch(`/access/metrics/attendance/${idEvento}`);
-                    const data = await res.json();
-                    const pct  = typeof data === 'number' ? data : (data.valor ?? data);
-                    statAttendance.textContent    = `${Number(pct).toFixed(1)}%`;
-                    statAttendanceSub.textContent = 'Evento seleccionado';
-                } catch {
-                    statAttendance.textContent = '--';
-                }
-            } else {
-                statAttendance.textContent    = '--';
-                statAttendanceSub.textContent = 'Selecciona un evento';
+    // ── Stats ──────────────────────────────────────────────────────
+    async function cargarStats() {
+        const idEvento = parseInt(document.getElementById('eventSelect').value);
+        if (idEvento) {
+            try {
+                const res  = await fetch(`/access/metrics/attendance/${idEvento}`);
+                const data = await res.json();
+                const pct  = typeof data === 'number' ? data : (data.valor ?? data);
+                statAttendance.textContent    = `${Number(pct).toFixed(1)}%`;
+                statAttendanceSub.textContent = 'Evento seleccionado';
+            } catch {
+                statAttendance.textContent = '--';
             }
+        } else {
+            statAttendance.textContent    = '--';
+            statAttendanceSub.textContent = 'Selecciona un evento';
         }
+    }
 
-        cargarStats();
-        setInterval(cargarStats, 30_000);
-        document.getElementById('eventSelect').addEventListener('change', cargarStats);
+    cargarStats();
+    setInterval(cargarStats, 30_000);
+    document.getElementById('eventSelect').addEventListener('change', cargarStats);
 
-        // ── Foco ───────────────────────────────────────────────────────
-        function keepFocus() {
-            if (!configIds.includes(document.activeElement?.id)) qrInput.focus();
-        }
-        document.addEventListener('click', e => { if (!configIds.includes(e.target.id)) keepFocus(); });
-        setInterval(keepFocus, 600);
-        keepFocus();
+    // ── Foco ───────────────────────────────────────────────────────
+    function keepFocus() {
+        if (!configIds.includes(document.activeElement?.id)) qrInput.focus();
+    }
+    document.addEventListener('click', e => { if (!configIds.includes(e.target.id)) keepFocus(); });
+    setInterval(keepFocus, 600);
+    keepFocus();
 
-        // ── Scanner ────────────────────────────────────────────────────
-        qrInput.addEventListener('keydown', async e => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const token = qrInput.value.trim();
-                if (token) await scan(token);
-            }
-        });
-
-        scanBtn.addEventListener('click', async () => {
+    // ── Scanner ────────────────────────────────────────────────────
+    qrInput.addEventListener('keydown', async e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
             const token = qrInput.value.trim();
             if (token) await scan(token);
-        });
+        }
+    });
 
-        clearBtn.addEventListener('click', () => {
-            qrInput.value = '';
-            resetResult();
-            keepFocus();
-        });
+    scanBtn.addEventListener('click', async () => {
+        const token = qrInput.value.trim();
+        if (token) await scan(token);
+    });
 
-        async function scan(token) {
-            setHealth('scanning', 'Validando...');
-            resultCard.dataset.result = 'idle';
-            resultIcon.textContent    = 'sync';
-            resultStatus.textContent  = 'Validando...';
-            resultMsg.textContent     = '';
+    clearBtn.addEventListener('click', () => {
+        qrInput.value = '';
+        resetResult();
+        keepFocus();
+    });
 
-            const body = {
-                qrPayload:   token,
-                idEmpleado:  parseInt(document.getElementById('staffId').value) || 1,
-                idEvento:    parseInt(document.getElementById('eventSelect').value) || null,
-                dispositivo: document.getElementById('deviceName').value || 'Acceso principal'
-            };
+    async function scan(token) {
+        setHealth('scanning', 'Validando...');
+        resultCard.dataset.result = 'idle';
+        resultIcon.textContent    = 'sync';
+        resultStatus.textContent  = 'Validando...';
+        resultMsg.textContent     = '';
 
-            try {
-                const res  = await fetch('/access/scan', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                const data = await res.json();
-                mostrar(data, token);
-                setHealth('ready', 'Scanner listo');
-            } catch {
-                mostrarError('Sin conexión con el servidor', token);
-                setHealth('error', 'Sin conexión');
-            }
+        const body = {
+            qrPayload:   token,
+            idEmpleado:  parseInt(document.getElementById('staffId').value) || 1,
+            idEvento:    parseInt(document.getElementById('eventSelect').value) || null,
+            dispositivo: document.getElementById('deviceName').value || 'Acceso principal'
+        };
 
-            qrInput.value = '';
+        try {
+            const res  = await fetch('/access/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            mostrar(data, token);
+            setHealth('ready', 'Scanner listo');
+        } catch {
+            mostrarError('Sin conexión con el servidor', token);
+            setHealth('error', 'Sin conexión');
         }
 
-        function mostrar(data, token) {
-            const r = (data.resultado ?? 'ERROR').toUpperCase();
-            const cfg = {
-                'VALIDO':    { state: 'valid',    icon: 'check_circle', status: 'ACCESO APROBADO', css: 'valid'     },
-                'DUPLICADO': { state: 'duplicate', icon: 'warning',      status: 'QR YA UTILIZADO', css: 'duplicate' },
-                'INVALIDO':  { state: 'invalid',   icon: 'cancel',       status: 'ACCESO DENEGADO', css: 'invalid'   },
-            }[r] ?? { state: 'error', icon: 'error', status: 'ERROR', css: 'error' };
+        qrInput.value = '';
+    }
 
-            resultCard.dataset.result = cfg.state;
-            resultIcon.textContent    = cfg.icon;
-            resultStatus.textContent  = cfg.status;
-            resultMsg.textContent     = data.mensaje ?? '';
+    function mostrar(data, token) {
+        const r = (data.resultado ?? 'ERROR').toUpperCase();
+        const cfg = {
+            'VALIDO':    { state: 'valid',    icon: 'check_circle', status: 'ACCESO APROBADO', css: 'valid'     },
+            'DUPLICADO': { state: 'duplicate', icon: 'warning',      status: 'QR YA UTILIZADO', css: 'duplicate' },
+            'INVALIDO':  { state: 'invalid',   icon: 'cancel',       status: 'ACCESO DENEGADO', css: 'invalid'   },
+        }[r] ?? { state: 'error', icon: 'error', status: 'ERROR', css: 'error' };
 
-            metaLatency.textContent = data.latenciaMs != null ? `${data.latenciaMs} ms` : '-- ms';
-            metaTicket.textContent  = data.idTicket  != null ? `Ticket #${data.idTicket}` : 'Ticket --';
-            metaScan.textContent    = data.idScan    != null ? `Registro #${data.idScan}`  : 'Registro --';
+        resultCard.dataset.result = cfg.state;
+        resultIcon.textContent    = cfg.icon;
+        resultStatus.textContent  = cfg.status;
+        resultMsg.textContent     = data.mensaje ?? '';
 
-            if (r === 'VALIDO') {
-                sessionScanned++;
-                statScanned.textContent = sessionScanned;
-                cargarStats();
-            }
+        metaLatency.textContent = data.latenciaMs != null ? `${data.latenciaMs} ms` : '-- ms';
+        metaTicket.textContent  = data.idTicket  != null ? `Ticket #${data.idTicket}` : 'Ticket --';
+        metaScan.textContent    = data.idScan    != null ? `Registro #${data.idScan}`  : 'Registro --';
 
-            addHistory(token, r, cfg.css);
+        if (r === 'VALIDO') {
+            sessionScanned++;
+            statScanned.textContent = sessionScanned;
+            cargarStats();
         }
 
-        function mostrarError(msg, token) {
-            resultCard.dataset.result = 'error';
-            resultIcon.textContent    = 'wifi_off';
-            resultStatus.textContent  = 'SIN CONEXIÓN';
-            resultMsg.textContent     = msg;
-            addHistory(token, 'ERROR', 'error');
-        }
+        addHistory(token, r, cfg.css);
+    }
 
-        function resetResult() {
-            resultCard.dataset.result = 'idle';
-            resultIcon.textContent    = 'qr_code_scanner';
-            resultStatus.textContent  = 'Esperando QR';
-            resultMsg.textContent     = 'Escanea un código para comenzar.';
-            metaLatency.textContent = '-- ms';
-            metaTicket.textContent  = 'Ticket --';
-            metaScan.textContent    = 'Registro --';
-        }
+    function mostrarError(msg, token) {
+        resultCard.dataset.result = 'error';
+        resultIcon.textContent    = 'wifi_off';
+        resultStatus.textContent  = 'SIN CONEXIÓN';
+        resultMsg.textContent     = msg;
+        addHistory(token, 'ERROR', 'error');
+    }
 
-        function addHistory(token, resultado, css) {
-            const hora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            history.unshift({ token, resultado, css, hora });
-            if (history.length > 50) history.pop();
-            saveState();
-            renderHistory();
-        }
+    function resetResult() {
+        resultCard.dataset.result = 'idle';
+        resultIcon.textContent    = 'qr_code_scanner';
+        resultStatus.textContent  = 'Esperando QR';
+        resultMsg.textContent     = 'Escanea un código para comenzar.';
+        metaLatency.textContent = '-- ms';
+        metaTicket.textContent  = 'Ticket --';
+        metaScan.textContent    = 'Registro --';
+    }
 
-        function setHealth(state, text) {
-            healthDot.className    = `health-dot ${state}`;
-            healthText.textContent = text;
-        }
+    function addHistory(token, resultado, css) {
+        const hora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        history.unshift({ token, resultado, css, hora });
+        if (history.length > 50) history.pop();
+        saveState();
+        renderHistory();
+    }
 
-        fetch('/access/scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
-            .then(() => setHealth('ready', 'Scanner listo'))
-            .catch(() => setHealth('error', 'API no disponible'));
-    })();
+    function setHealth(state, text) {
+        healthDot.className    = `health-dot ${state}`;
+        healthText.textContent = text;
+    }
+
+    fetch('/access/scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+        .then(() => setHealth('ready', 'Scanner listo'))
+        .catch(() => setHealth('error', 'API no disponible'));
+})();
 </script>
 </body>
 </html>
