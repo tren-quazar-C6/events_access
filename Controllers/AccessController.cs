@@ -41,22 +41,44 @@ public sealed class AccessController : Controller
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.QrPayload))
-        {
-            return BadRequest(new
-            {
-                error = "QR ilegible."
-            });
-        }
+            return BadRequest(new { error = "QR ilegible." });
 
         if (request.IdEmpleado <= 0)
-        {
-            return BadRequest(new
-            {
-                error = "Debes indicar el empleado que controla el acceso."
-            });
-        }
+            return BadRequest(new { error = "Debes indicar el empleado que controla el acceso." });
 
         var result = await _apiClient.ScanAsync(request, cancellationToken);
         return Ok(result);
+    }
+
+    // ── Métricas (proxy para evitar CORS) ────────────────────────
+
+    [HttpGet("/access/metrics/tickets-sold")]
+    public async Task<IActionResult> GetTicketsSold(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _apiClient.GetTicketsSoldAsync(cancellationToken);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not load tickets-sold metric.");
+            return Ok(new { valor = 0 });
+        }
+    }
+
+    [HttpGet("/access/metrics/attendance/{idEvento:int}")]
+    public async Task<IActionResult> GetAttendance(int idEvento, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _apiClient.GetAttendanceAsync(idEvento, cancellationToken);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not load attendance metric for event {IdEvento}.", idEvento);
+            return Ok(0);
+        }
     }
 }

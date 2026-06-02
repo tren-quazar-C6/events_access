@@ -30,6 +30,34 @@ public sealed class AccessApiClient
         return response?.Data ?? [];
     }
 
+    /// <summary>
+    /// Obtiene el total de tickets vendidos.
+    /// Se llama desde el controller como proxy para evitar CORS en el navegador.
+    /// </summary>
+    public async Task<object> GetTicketsSoldAsync(CancellationToken cancellationToken)
+    {
+        var result = await _httpClient.GetFromJsonAsync<object>(
+            "api/metrics/tickets-sold",
+            JsonOptions,
+            cancellationToken);
+
+        return result ?? new { valor = 0 };
+    }
+
+    /// <summary>
+    /// Obtiene el porcentaje de asistencia de un evento específico.
+    /// Se llama desde el controller como proxy para evitar CORS en el navegador.
+    /// </summary>
+    public async Task<object> GetAttendanceAsync(int idEvento, CancellationToken cancellationToken)
+    {
+        var result = await _httpClient.GetFromJsonAsync<object>(
+            $"api/metrics/eventos/{idEvento}/attendance-rate",
+            JsonOptions,
+            cancellationToken);
+
+        return result ?? 0;
+    }
+
     public async Task<AccessScanResult> ScanAsync(AccessScanRequest request, CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -60,9 +88,7 @@ public sealed class AccessApiClient
             stopwatch.Stop();
 
             if (response.StatusCode == HttpStatusCode.RequestTimeout)
-            {
                 return BuildLocalFailure("TIMEOUT_API", "Timeout API.", null, null, scanTime, stopwatch.ElapsedMilliseconds, qrToken);
-            }
 
             if (!response.IsSuccessStatusCode || payload is null || payload.Success is false || payload.Data is null)
             {
@@ -94,9 +120,9 @@ public sealed class AccessApiClient
     {
         var title = scan.Resultado.ToUpperInvariant() switch
         {
-            "VALIDO" => "ACCESO AUTORIZADO",
+            "VALIDO"    => "ACCESO AUTORIZADO",
             "DUPLICADO" => "QR YA ESCANEADO",
-            _ => "ACCESO DENEGADO"
+            _           => "ACCESO DENEGADO"
         };
 
         return new AccessScanResult(
