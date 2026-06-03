@@ -319,7 +319,9 @@
             try {
                 const res  = await fetch(`/access/metrics/attendance/${idEvento}`);
                 const data = await res.json();
-                const pct  = typeof data === 'number' ? data : (data.valor ?? data);
+                const pct = typeof data === 'number'
+                    ? data
+                    : (data.tasaAsistencia ?? data.valor ?? data);
                 statAttendance.textContent    = `${Number(pct).toFixed(1)}%`;
                 statAttendanceSub.textContent = 'Evento seleccionado';
             } catch {
